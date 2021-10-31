@@ -24,6 +24,7 @@ class State {
  private:
   std::vector<std::vector<char>> board_;
   std::vector<Position> player_positions_;
+  int64_t true_player_;
 };
 
 #endif
