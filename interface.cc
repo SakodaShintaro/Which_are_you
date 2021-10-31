@@ -1,5 +1,6 @@
 #include "interface.h"
 #include "state.h"
+#include "agent.h"
 
 void Manual() {
   State state;
@@ -35,5 +36,15 @@ void Manual() {
         break;
     }
     state.Step(a);
+  }
+}
+
+void Learn() {
+  State state;
+  Agent agent;
+  while (true) {
+    Action a = agent.SelectAction(state);
+    state.Step(a);
+    std::cout << state;
   }
 }
