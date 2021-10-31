@@ -1,6 +1,7 @@
 #include "state.h"
 
 #include <random>
+#include <tuple>
 
 State::State() : board_(kBoardSize, std::vector<char>(kBoardSize, '.')), player_positions_(kPlayerNum) {
   for (int64_t i = 0; i < kBoardSize; i++) {
@@ -47,7 +48,15 @@ void State::Init() {
   true_player_ = dist_player(engine);
 }
 
-void State::Step(Action a) {
+std::tuple<bool, float> State::Step(Action a) {
+  std::cout << "action = " << a << std::endl;
+  if (a >= kActionNum) {
+    //この場合、移動を止めて正解を答える行動ということ
+    const int64_t answer = a - kActionNum;
+    const float reward = (answer == true_player_);
+    return std::make_tuple(true, reward);
+  }
+
   std::mt19937_64 engine(std::random_device{}());
   std::uniform_int_distribution<int64_t> dist_pos(0, kActionNum - 1);
   for (int64_t i = 0; i < kPlayerNum; i++) {
@@ -65,4 +74,5 @@ void State::Step(Action a) {
       player_positions_[i].y = ni;
     }
   }
+  return std::make_tuple(false, 0.0f);
 }

@@ -44,7 +44,11 @@ void Learn() {
   Agent agent;
   while (true) {
     Action a = agent.SelectAction(state);
-    state.Step(a);
+    auto [is_finish, reward] = state.Step(a);
     std::cout << state;
+    if (is_finish) {
+      std::cout << "reward = " << reward << std::endl;
+      break;
+    }
   }
 }

@@ -6,6 +6,7 @@
 #include <vector>
 
 enum Action { kUp, kRight, kDown, kLeft, kActionNum };
+static constexpr int64_t kPlayerNum = 4;
 
 constexpr int64_t kDi[kActionNum] = {-1, 0, 1, 0};
 constexpr int64_t kDj[kActionNum] = {0, 1, 0, -1};
@@ -19,11 +20,10 @@ struct Position {
 class State {
  public:
   static constexpr int64_t kBoardSize = 10;
-  static constexpr int64_t kPlayerNum = 4;
   State();
   friend std::ostream& operator<<(std::ostream& ost, const State& state);
   void Init();
-  void Step(Action a);
+  std::tuple<bool, float> Step(Action a);
 
  private:
   std::vector<std::vector<char>> board_;
