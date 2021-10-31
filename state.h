@@ -18,10 +18,11 @@ class State {
   static constexpr int64_t kPlayerNum = 4;
   State();
   friend std::ostream& operator<<(std::ostream& ost, const State& state);
+  void Init();
   void Step(Action a);
 
  private:
-  std::vector<std::vector<int64_t>> board_;
+  std::vector<std::vector<char>> board_;
   std::vector<Position> player_positions_;
 };
 
