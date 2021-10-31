@@ -6,10 +6,14 @@
 #include <vector>
 
 enum Action { kUp, kRight, kDown, kLeft, kActionNum };
+
+constexpr int64_t kDi[kActionNum] = {-1, 0, 1, 0};
+constexpr int64_t kDj[kActionNum] = {0, 1, 0, -1};
+
 enum SquareKind { kEmpty, kWall };
 
 struct Position {
-    int64_t x, y;
+  int64_t x, y;
 };
 
 class State {
