@@ -83,12 +83,12 @@ void Learn() {
       }
     }
 
-    constexpr float learn_rate_ = 0.01f;
-    torch::optim::SGDOptions sgd_option(learn_rate_);
+    constexpr float learn_rate = 0.01f;
+    torch::optim::SGDOptions sgd_option(learn_rate);
     sgd_option.momentum(0.9f);
     sgd_option.weight_decay(1e-4f);
     std::vector<torch::Tensor> parameters;
-    torch::optim::SGD optimizer_(agent.Parameters(), sgd_option);
+    torch::optim::SGD optimizer(agent.Parameters(), sgd_option);
 
     Episode episode = state.GetEpisode();
     torch::Tensor loss = agent.Train(episode);
@@ -106,8 +106,8 @@ void Learn() {
       accuracy_list.clear();
     }
 
-    optimizer_.zero_grad();
+    optimizer.zero_grad();
     loss.backward();
-    optimizer_.step();
+    optimizer.step();
   }
 }
