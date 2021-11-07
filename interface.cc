@@ -1,6 +1,29 @@
 #include "interface.h"
-#include "state.h"
+
 #include "agent.h"
+#include "state.h"
+
+void PrintEpisode(const Episode& episode) {
+  for (uint64_t i = 0; i < episode.actions.size(); i++) {
+    for (int64_t ch = 0; ch <= kPlayerNum; ch++) {
+      std::cout << "ch = " << ch << std::endl;
+      for (int64_t j = 0; j < State::kBoardWidth; j++) {
+        for (int64_t k = 0; k < State::kBoardWidth; k++) {
+          const int64_t index = ch * State::kBoardSize + j * State::kBoardWidth + k;
+          std::cout << episode.state_features[i][index] << " ";
+        }
+        std::cout << std::endl;
+      }
+    }
+    std::cout << "pre_action = ";
+    for (int64_t k = 0; k < kAllActionNum; k++) {
+      std::cout << episode.state_features[i][(kPlayerNum + 1) * State::kBoardSize + k] << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "action = " << episode.actions[i] << std::endl;
+  }
+  std::cout << "reward = " << episode.reward << std::endl;
+}
 
 void Manual() {
   State state;
@@ -51,4 +74,7 @@ void Learn() {
       break;
     }
   }
+
+  Episode episode = state.GetEpisode();
+  PrintEpisode(episode);
 }

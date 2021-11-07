@@ -110,7 +110,7 @@ std::vector<float> State::GetFeature() const {
   }
 
   // 行動
-  feature[kPlayerNum * kBoardSize + pre_action_] = 1;
+  feature[(kPlayerNum + 1) * kBoardSize + pre_action_] = 1;
 
   return feature;
 }
