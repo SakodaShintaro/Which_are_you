@@ -3,14 +3,29 @@
 #include <random>
 
 constexpr int64_t kInputSize = (kPlayerNum + 1) * State::kBoardSize + kAllActionNum;
+constexpr int64_t kPolicyDim = kAllActionNum - 1;
 
 // 行動にはnull_moveも含まれているが、それを選択することはないので-1した値を方策の数とする
-Agent::Agent() : lstm_(kInputSize, kAllActionNum - 1) {}
+Agent::Agent() : lstm_(kInputSize, kPolicyDim) {}
 
 Action Agent::SelectAction(const State& state) {
+  std::vector<float> curr_feature = state.GetFeature();
+  torch::Tensor input_tensor = torch::tensor(curr_feature);
+  input_tensor = input_tensor.view({1, 1, kInputSize});
+  torch::Tensor output = lstm_.forward(input_tensor);
+  torch::Tensor policy = torch::softmax(output.flatten(), 0);
+
   std::mt19937_64 engine(std::random_device{}());
-  std::uniform_int_distribution<int64_t> dist(0, kMoveActionNum + kPlayerNum - 1);
-  return Action(dist(engine));
+  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+  float prob = dist(engine);
+  for (int64_t i = 0; i < kPolicyDim; i++) {
+    if ((prob -= policy[i].item<float>()) <= 0) {
+      return Action(i);
+    }
+  }
+
+  //ここに到達することはありえないはず
+  std::exit(1);
 }
 
 torch::Tensor Agent::Train(const Episode& episode) {
@@ -24,14 +39,14 @@ torch::Tensor Agent::Train(const Episode& episode) {
   }
 
   torch::Tensor input_tensor = torch::tensor(input);
-  const int64_t dim = input.size() / episode_length;
-  input_tensor = input_tensor.view({episode_length, 1, dim});
+  assert(input.size() / episode_length == kInputSize);
+  input_tensor = input_tensor.view({episode_length, 1, kInputSize});
   torch::Tensor output = lstm_.forwardSequence(input_tensor);
 
   torch::Tensor loss = torch::zeros({1});
   for (int64_t i = 0; i < episode_length; i++) {
     torch::Tensor curr_log_policy = torch::log_softmax(output[i], 1);
-    loss += curr_log_policy[0][episode.actions[i]] * episode.reward;
+    loss -= curr_log_policy[0][episode.actions[i]] * episode.reward;
   }
 
   return loss;

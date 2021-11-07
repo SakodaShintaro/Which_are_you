@@ -10,6 +10,7 @@ class Agent {
   Action SelectAction(const State& state);
   torch::Tensor Train(const Episode& episode);
   std::vector<torch::Tensor> Parameters();
+  void ResetLSTM() { lstm_.resetState(); }
 
  private:
   AgentLSTM lstm_;

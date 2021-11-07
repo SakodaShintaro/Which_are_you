@@ -67,6 +67,7 @@ void Learn() {
   Agent agent;
   while (true) {
     state.Init();
+    agent.ResetLSTM();
     while (true) {
       Action a = agent.SelectAction(state);
       auto [is_finish, reward] = state.Step(a);
