@@ -13,11 +13,10 @@ enum Action {
   kMoveActionNum,
   kAnswerA = kMoveActionNum,
   kAnswerB,
-  kAnswerC,
   kNullAction,
   kAllActionNum,
 };
-static constexpr int64_t kPlayerNum = 3;
+static constexpr int64_t kPlayerNum = 2;
 
 constexpr int64_t kDi[kMoveActionNum] = {-1, 0, 1, 0};
 constexpr int64_t kDj[kMoveActionNum] = {0, 1, 0, -1};
@@ -32,6 +31,7 @@ struct Episode {
   std::vector<std::vector<float>> state_features;
   std::vector<Action> actions;
   float reward;
+  float correctness;
   void Init() {
     state_features.clear();
     actions.clear();
@@ -40,7 +40,7 @@ struct Episode {
 
 class State {
  public:
-  static constexpr int64_t kBoardWidth = 10;
+  static constexpr int64_t kBoardWidth = 6;
   static constexpr int64_t kBoardSize = kBoardWidth * kBoardWidth;
   State();
   friend std::ostream& operator<<(std::ostream& ost, const State& state);

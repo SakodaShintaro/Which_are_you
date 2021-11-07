@@ -67,7 +67,9 @@ void Learn() {
   Agent agent;
   std::vector<float> reward_list;
   std::vector<float> loss_list;
-  constexpr int64_t kAverageSize = 100;
+  std::vector<float> accuracy_list;
+  std::cout << std::fixed;
+  constexpr int64_t kAverageSize = 200;
   for (int64_t step = 1; step <= 100000; step++) {
     state.Init();
     agent.ResetLSTM();
@@ -81,7 +83,7 @@ void Learn() {
       }
     }
 
-    constexpr float learn_rate_ = 0.001f;
+    constexpr float learn_rate_ = 0.01f;
     torch::optim::SGDOptions sgd_option(learn_rate_);
     sgd_option.momentum(0.9f);
     sgd_option.weight_decay(1e-4f);
@@ -92,13 +94,16 @@ void Learn() {
     torch::Tensor loss = agent.Train(episode);
     reward_list.push_back(episode.reward);
     loss_list.push_back(loss.item<float>());
+    accuracy_list.push_back(episode.correctness);
 
     if (reward_list.size() == kAverageSize) {
       float reward_average = std::accumulate(reward_list.begin(), reward_list.end(), 0.0f) / kAverageSize;
       float loss_average = std::accumulate(loss_list.begin(), loss_list.end(), 0.0f) / kAverageSize;
-      std::cout << step << "\t" << reward_average << "\t" << loss_average << std::endl;
+      float accuracy = std::accumulate(accuracy_list.begin(), accuracy_list.end(), 0.0f) / kAverageSize;
+      std::cout << step << "\t" << accuracy << "\t" << reward_average << "\t" << loss_average << std::endl;
       reward_list.clear();
       loss_list.clear();
+      accuracy_list.clear();
     }
 
     optimizer_.zero_grad();
