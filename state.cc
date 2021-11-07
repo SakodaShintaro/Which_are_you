@@ -3,10 +3,10 @@
 #include <random>
 #include <tuple>
 
-State::State() : board_(kBoardSize, std::vector<char>(kBoardSize, '.')), player_positions_(kPlayerNum) {
-  for (int64_t i = 0; i < kBoardSize; i++) {
-    for (int64_t j = 0; j < kBoardSize; j++) {
-      if (i == 0 || i == kBoardSize - 1 || j == 0 || j == kBoardSize - 1) {
+State::State() : board_(kBoardWidth, std::vector<char>(kBoardWidth, '.')), player_positions_(kPlayerNum) {
+  for (int64_t i = 0; i < kBoardWidth; i++) {
+    for (int64_t j = 0; j < kBoardWidth; j++) {
+      if (i == 0 || i == kBoardWidth - 1 || j == 0 || j == kBoardWidth - 1) {
         board_[i][j] = '#';
       }
     }
@@ -16,8 +16,8 @@ State::State() : board_(kBoardSize, std::vector<char>(kBoardSize, '.')), player_
 
 std::ostream& operator<<(std::ostream& ost, const State& state) {
   ost << "真のプレイヤー: " << char('A' + state.true_player_) << std::endl;
-  for (int64_t i = 0; i < State::kBoardSize; i++) {
-    for (int64_t j = 0; j < State::kBoardSize; j++) {
+  for (int64_t i = 0; i < State::kBoardWidth; i++) {
+    for (int64_t j = 0; j < State::kBoardWidth; j++) {
       ost << state.board_[i][j];
     }
     ost << std::endl;
@@ -28,7 +28,7 @@ std::ostream& operator<<(std::ostream& ost, const State& state) {
 void State::Init() {
   // 各プレイヤーの位置をランダムに決定する
   std::mt19937_64 engine(std::random_device{}());
-  std::uniform_int_distribution<int64_t> dist_pos(1, kBoardSize - 2);
+  std::uniform_int_distribution<int64_t> dist_pos(1, kBoardWidth - 2);
   player_positions_.resize(kPlayerNum);
   for (int64_t i = 0; i < kPlayerNum; i++) {
     while (true) {
@@ -46,19 +46,29 @@ void State::Init() {
   // どのプレイヤーが真のプレイヤーか決定
   std::uniform_int_distribution<int64_t> dist_player(0, kPlayerNum - 1);
   true_player_ = dist_player(engine);
+
+  // 前の行動を初期化
+  pre_action_ = kNullAction;
+
+  // エピソード初期化
+  episode_.Init();
 }
 
 std::tuple<bool, float> State::Step(Action a) {
   std::cout << "action = " << a << std::endl;
-  if (a >= kActionNum) {
+  episode_.state_features.push_back(GetFeature());
+  episode_.actions.push_back(a);
+  pre_action_ = a;
+  if (a >= kMoveActionNum) {
     //この場合、移動を止めて正解を答える行動ということ
-    const int64_t answer = a - kActionNum;
+    const int64_t answer = a - kMoveActionNum;
     const float reward = (answer == true_player_);
+    episode_.reward = reward;
     return std::make_tuple(true, reward);
   }
 
   std::mt19937_64 engine(std::random_device{}());
-  std::uniform_int_distribution<int64_t> dist_pos(0, kActionNum - 1);
+  std::uniform_int_distribution<int64_t> dist_pos(0, kMoveActionNum - 1);
   for (int64_t i = 0; i < kPlayerNum; i++) {
     const Action action = (i == true_player_ ? a : Action(dist_pos(engine)));
     const int64_t ni = player_positions_[i].y + kDi[action];
@@ -76,3 +86,33 @@ std::tuple<bool, float> State::Step(Action a) {
   }
   return std::make_tuple(false, 0.0f);
 }
+
+std::vector<float> State::GetFeature() const {
+  // 盤面に関する情報が(kPlayerNum + 1)×H×Wであり、行動に関する情報がkAllActionNum
+  std::vector<float> feature(kBoardSize * (kPlayerNum + 1) + kAllActionNum, 0);
+
+  // board C×H×Wの順番で並べる
+  for (int64_t i = 0; i < kBoardWidth; i++) {
+    for (int64_t j = 0; j < kBoardWidth; j++) {
+      const int64_t index = i * kBoardWidth + j;
+      switch (board_[i][j]) {
+        case '#':
+          feature[kPlayerNum * kBoardSize + index] = 1;
+          break;
+        case '.':
+          break;
+        default:
+          const int64_t ch = board_[i][j] - 'A';
+          feature[ch * kBoardSize + index] = 1;
+          break;
+      }
+    }
+  }
+
+  // 行動
+  feature[kPlayerNum * kBoardSize + pre_action_] = 1;
+
+  return feature;
+}
+
+Episode State::GetEpisode() const { return episode_; }

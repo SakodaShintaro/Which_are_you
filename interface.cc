@@ -16,7 +16,7 @@ void Manual() {
       break;
     }
 
-    Action a = kActionNum;
+    Action a = kMoveActionNum;
     switch (op) {
       case 'U':
         a = kUp;
