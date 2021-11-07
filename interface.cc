@@ -71,8 +71,10 @@ void Learn() {
   for (int64_t step = 1; step <= 100000; step++) {
     state.Init();
     agent.ResetLSTM();
+    bool first_select = true;
     while (true) {
-      Action a = agent.SelectAction(state);
+      Action a = agent.SelectAction(state, first_select);
+      first_select = false;
       auto [is_finish, reward] = state.Step(a);
       if (is_finish) {
         break;
