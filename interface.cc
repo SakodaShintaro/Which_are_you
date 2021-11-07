@@ -71,7 +71,6 @@ void Learn() {
       Action a = agent.SelectAction(state);
       auto [is_finish, reward] = state.Step(a);
       if (is_finish) {
-        std::cout << "reward = " << reward << std::endl;
         break;
       }
     }
@@ -85,7 +84,8 @@ void Learn() {
 
     Episode episode = state.GetEpisode();
     torch::Tensor loss = agent.Train(episode);
-    std::cout << "loss = " << loss.item<float>() << std::endl;
+    std::cout << "reward = " << episode.reward << "\t"
+              << "loss = " << loss.item<float>() << std::endl;
     optimizer_.zero_grad();
     loss.backward();
     optimizer_.step();

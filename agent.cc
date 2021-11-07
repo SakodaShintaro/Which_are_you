@@ -23,15 +23,10 @@ torch::Tensor Agent::Train(const Episode& episode) {
     input.insert(input.end(), curr_feature.begin(), curr_feature.end());
   }
 
-  std::cout << "episode_length = " << episode_length << std::endl;
-
-  std::cout << "input.size() = " << input.size() << std::endl;
   torch::Tensor input_tensor = torch::tensor(input);
   const int64_t dim = input.size() / episode_length;
   input_tensor = input_tensor.view({episode_length, 1, dim});
-  std::cout << "input_tensor.sizes() = " << input_tensor.sizes() << std::endl;
   torch::Tensor output = lstm_.forwardSequence(input_tensor);
-  std::cout << "output.sizes() = " << output.sizes() << std::endl;
 
   torch::Tensor loss = torch::zeros({1});
   for (int64_t i = 0; i < episode_length; i++) {

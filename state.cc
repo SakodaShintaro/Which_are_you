@@ -4,13 +4,6 @@
 #include <tuple>
 
 State::State() : board_(kBoardWidth, std::vector<char>(kBoardWidth, '.')), player_positions_(kPlayerNum) {
-  for (int64_t i = 0; i < kBoardWidth; i++) {
-    for (int64_t j = 0; j < kBoardWidth; j++) {
-      if (i == 0 || i == kBoardWidth - 1 || j == 0 || j == kBoardWidth - 1) {
-        board_[i][j] = '#';
-      }
-    }
-  }
   Init();
 }
 
@@ -26,6 +19,17 @@ std::ostream& operator<<(std::ostream& ost, const State& state) {
 }
 
 void State::Init() {
+  // 壁と床の配置
+  for (int64_t i = 0; i < kBoardWidth; i++) {
+    for (int64_t j = 0; j < kBoardWidth; j++) {
+      if (i == 0 || i == kBoardWidth - 1 || j == 0 || j == kBoardWidth - 1) {
+        board_[i][j] = '#';
+      } else {
+        board_[i][j] = '.';
+      }
+    }
+  }
+
   // 各プレイヤーの位置をランダムに決定する
   std::mt19937_64 engine(std::random_device{}());
   std::uniform_int_distribution<int64_t> dist_pos(1, kBoardWidth - 2);
@@ -55,7 +59,6 @@ void State::Init() {
 }
 
 std::tuple<bool, float> State::Step(Action a) {
-  std::cout << "action = " << a << std::endl;
   episode_.state_features.push_back(GetFeature());
   episode_.actions.push_back(a);
   pre_action_ = a;
