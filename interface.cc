@@ -68,7 +68,7 @@ void Learn() {
   std::vector<float> reward_list;
   std::vector<float> loss_list;
   constexpr int64_t kAverageSize = 100;
-  for (int64_t i = 0; i < 100000; i++) {
+  for (int64_t step = 1; step <= 100000; step++) {
     state.Init();
     agent.ResetLSTM();
     while (true) {
@@ -94,7 +94,7 @@ void Learn() {
     if (reward_list.size() == kAverageSize) {
       float reward_average = std::accumulate(reward_list.begin(), reward_list.end(), 0.0f) / kAverageSize;
       float loss_average = std::accumulate(loss_list.begin(), loss_list.end(), 0.0f) / kAverageSize;
-      std::cout << reward_average << "\t" << loss_average << std::endl;
+      std::cout << step << "\t" << reward_average << "\t" << loss_average << std::endl;
       reward_list.clear();
       loss_list.clear();
     }

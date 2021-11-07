@@ -14,11 +14,10 @@ enum Action {
   kAnswerA = kMoveActionNum,
   kAnswerB,
   kAnswerC,
-  kAnswerD,
   kNullAction,
   kAllActionNum,
 };
-static constexpr int64_t kPlayerNum = 4;
+static constexpr int64_t kPlayerNum = 3;
 
 constexpr int64_t kDi[kMoveActionNum] = {-1, 0, 1, 0};
 constexpr int64_t kDj[kMoveActionNum] = {0, 1, 0, -1};
