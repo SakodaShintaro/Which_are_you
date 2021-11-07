@@ -65,7 +65,7 @@ std::tuple<bool, float> State::Step(Action a) {
   if (a >= kMoveActionNum) {
     //この場合、移動を止めて正解を答える行動ということ
     const int64_t answer = a - kMoveActionNum;
-    const float reward = (answer == true_player_);
+    const float reward = (answer == true_player_ && episode_.actions.size() != 1);
     episode_.reward = reward;
     return std::make_tuple(true, reward);
   }
