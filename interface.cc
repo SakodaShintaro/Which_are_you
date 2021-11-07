@@ -66,15 +66,28 @@ void Learn() {
   State state;
   Agent agent;
   while (true) {
-    Action a = agent.SelectAction(state);
-    auto [is_finish, reward] = state.Step(a);
-    std::cout << state;
-    if (is_finish) {
-      std::cout << "reward = " << reward << std::endl;
-      break;
+    state.Init();
+    while (true) {
+      Action a = agent.SelectAction(state);
+      auto [is_finish, reward] = state.Step(a);
+      if (is_finish) {
+        std::cout << "reward = " << reward << std::endl;
+        break;
+      }
     }
-  }
 
-  Episode episode = state.GetEpisode();
-  agent.Train(episode);
+    constexpr float learn_rate_ = 0.0001f;
+    torch::optim::SGDOptions sgd_option(learn_rate_);
+    sgd_option.momentum(0.9f);
+    sgd_option.weight_decay(1e-4f);
+    std::vector<torch::Tensor> parameters;
+    torch::optim::SGD optimizer_(agent.Parameters(), sgd_option);
+
+    Episode episode = state.GetEpisode();
+    torch::Tensor loss = agent.Train(episode);
+    std::cout << "loss = " << loss.item<float>() << std::endl;
+    optimizer_.zero_grad();
+    loss.backward();
+    optimizer_.step();
+  }
 }

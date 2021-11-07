@@ -2,7 +2,10 @@
 
 #include <random>
 
-Agent::Agent() : lstm_(1, 1, 1, 1) {}
+constexpr int64_t kInputSize = (kPlayerNum + 1) * State::kBoardSize + kAllActionNum;
+
+// 行動にはnull_moveも含まれているが、それを選択することはないので-1した値を方策の数とする
+Agent::Agent() : lstm_(kInputSize, kAllActionNum - 1) {}
 
 Action Agent::SelectAction(const State& state) {
   std::mt19937_64 engine(std::random_device{}());
@@ -10,7 +13,7 @@ Action Agent::SelectAction(const State& state) {
   return Action(dist(engine));
 }
 
-void Agent::Train(const Episode& episode) {
+torch::Tensor Agent::Train(const Episode& episode) {
   // LSTMに与える入力を作る
   std::vector<float> input;
   const int64_t episode_length = episode.actions.size();
@@ -29,4 +32,14 @@ void Agent::Train(const Episode& episode) {
   std::cout << "input_tensor.sizes() = " << input_tensor.sizes() << std::endl;
   torch::Tensor output = lstm_.forwardSequence(input_tensor);
   std::cout << "output.sizes() = " << output.sizes() << std::endl;
+
+  torch::Tensor loss = torch::zeros({1});
+  for (int64_t i = 0; i < episode_length; i++) {
+    torch::Tensor curr_log_policy = torch::log_softmax(output[i], 1);
+    loss += curr_log_policy[0][episode.actions[i]] * episode.reward;
+  }
+
+  return loss;
 }
+
+std::vector<torch::Tensor> Agent::Parameters() { return lstm_.Parameters(); }

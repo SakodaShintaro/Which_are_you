@@ -8,7 +8,8 @@ class Agent {
  public:
   Agent();
   Action SelectAction(const State& state);
-  void Train(const Episode& episode);
+  torch::Tensor Train(const Episode& episode);
+  std::vector<torch::Tensor> Parameters();
 
  private:
   AgentLSTM lstm_;

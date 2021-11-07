@@ -46,3 +46,14 @@ torch::Tensor AgentLSTM::forwardSequence(const torch::Tensor& input) {
 
   return output;
 }
+
+std::vector<torch::Tensor> AgentLSTM::Parameters() {
+  std::vector<torch::Tensor> parameters;
+  for (auto p : lstm_->parameters()) {
+    parameters.push_back(p);
+  }
+  for (auto p : final_layer_->parameters()) {
+    parameters.push_back(p);
+  }
+  return parameters;
+}
