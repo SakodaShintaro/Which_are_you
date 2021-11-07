@@ -8,10 +8,10 @@ class Agent {
  public:
   Agent();
   Action SelectAction(const State& state);
-  void train(float reward);
+  void Train(const Episode& episode);
 
  private:
-  LSTM lstm_;
+  AgentLSTM lstm_;
 };
 
 #endif

@@ -76,5 +76,5 @@ void Learn() {
   }
 
   Episode episode = state.GetEpisode();
-  PrintEpisode(episode);
+  agent.Train(episode);
 }

@@ -1,6 +1,6 @@
 #include "model.h"
 
-LSTMImpl::LSTMImpl(int64_t input_size, int64_t output_size, int64_t num_layers, int64_t hidden_size)
+AgentLSTM::AgentLSTM(int64_t input_size, int64_t output_size, int64_t num_layers, int64_t hidden_size)
     : input_size_(input_size), num_layers_(num_layers), hidden_size_(hidden_size) {
   torch::nn::LSTMOptions option(input_size, hidden_size);
   option.num_layers(num_layers);
@@ -9,7 +9,7 @@ LSTMImpl::LSTMImpl(int64_t input_size, int64_t output_size, int64_t num_layers, 
   resetState();
 }
 
-torch::Tensor LSTMImpl::forward(const torch::Tensor& x) {
+torch::Tensor AgentLSTM::forward(const torch::Tensor& x) {
   // lstmは入力(input, (h_0, c_0))
   // inputのshapeは(seq_len, batch, input_size)
   // h_0, c_0は任意の引数で、状態を初期化できる
@@ -29,12 +29,12 @@ torch::Tensor LSTMImpl::forward(const torch::Tensor& x) {
   return output;
 }
 
-void LSTMImpl::resetState() {
+void AgentLSTM::resetState() {
   h_ = torch::zeros({num_layers_, 1, hidden_size_});
   c_ = torch::zeros({num_layers_, 1, hidden_size_});
 }
 
-torch::Tensor LSTMImpl::forwardSequence(const torch::Tensor& input) {
+torch::Tensor AgentLSTM::forwardSequence(const torch::Tensor& input) {
   // lstmは入力(input, (h_0, c_0))
   // inputのshapeは(seq_len, batch, input_size)
 
