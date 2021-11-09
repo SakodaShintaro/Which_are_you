@@ -48,7 +48,7 @@ void State::Init() {
   player_positions_.resize(kPlayerNum);
   for (int64_t i = 0; i < kPlayerNum; i++) {
     int64_t x = (i == 0 ? 1 : kBoardWidth - 2);
-    int64_t y = (i == 0 ? 1 : kBoardWidth - 2);
+    int64_t y = kBoardWidth / 2;
     assert(board_[y][x] == '.');
     player_positions_[i].x = x;
     player_positions_[i].y = y;
