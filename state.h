@@ -40,7 +40,7 @@ struct Episode {
 
 class State {
  public:
-  static constexpr int64_t kBoardWidth = 6;
+  static constexpr int64_t kBoardWidth = 5;
   static constexpr int64_t kBoardSize = kBoardWidth * kBoardWidth;
   State();
   friend std::ostream& operator<<(std::ostream& ost, const State& state);
