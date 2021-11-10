@@ -62,6 +62,55 @@ void Manual() {
   }
 }
 
+void Visualize() {
+  State state;
+  Agent agent;
+  std::cout << std::fixed;
+  constexpr int64_t kAverageSize = 200;
+  state.Init();
+  agent.ResetLSTM();
+  std::cout << state;
+  bool first_select = true;
+  while (true) {
+    Action a = agent.SelectAction(state, first_select);
+    std::cout << "action = " << a << std::endl;
+    first_select = false;
+    auto [is_finish, reward] = state.Step(a);
+    std::cout << state;
+    if (is_finish) {
+      break;
+    }
+  }
+
+  Episode episode = state.GetEpisode();
+  std::cout << "reward = " << episode.reward << std::endl;
+  std::cout << "correctness = " << episode.correctness << std::endl;
+  std::cout << "-------------------------------------" << std::endl;
+
+  for (int64_t step = 1; step <= 10000000; step++) {
+    constexpr float learn_rate = 0.01f;
+    torch::optim::SGDOptions sgd_option(learn_rate);
+    sgd_option.momentum(0.9f);
+    sgd_option.weight_decay(1e-4f);
+    std::vector<torch::Tensor> parameters;
+    torch::optim::SGD optimizer(agent.Parameters(), sgd_option);
+
+    torch::Tensor loss = agent.Train(episode);
+
+    optimizer.zero_grad();
+    loss.backward();
+    optimizer.step();
+
+    // 学習後の結果を見る
+    state.Init();
+    agent.ResetLSTM();
+    Action a = agent.SelectAction(state, true);
+
+    int64_t wait;
+    std::cin >> wait;
+  }
+}
+
 void Learn() {
   State state;
   Agent agent;
@@ -83,7 +132,7 @@ void Learn() {
       }
     }
 
-    constexpr float learn_rate = 0.01f;
+    constexpr float learn_rate = 0.1f;
     torch::optim::SGDOptions sgd_option(learn_rate);
     sgd_option.momentum(0.9f);
     sgd_option.weight_decay(1e-4f);
