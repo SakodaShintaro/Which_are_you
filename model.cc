@@ -2,7 +2,8 @@
 
 AgentLSTM::AgentLSTM(int64_t input_size, int64_t output_size, int64_t num_layers, int64_t hidden_size)
     : input_size_(input_size), num_layers_(num_layers), hidden_size_(hidden_size) {
-  torch::nn::LSTMOptions option(input_size, hidden_size);
+  first_layer_ = register_module("first_layer_", torch::nn::Linear(input_size, hidden_size));
+  torch::nn::LSTMOptions option(hidden_size, hidden_size);
   option.num_layers(num_layers);
   lstm_ = register_module("lstm_", torch::nn::LSTM(option));
   final_layer_ = register_module("final_layer_", torch::nn::Linear(hidden_size, output_size));
@@ -11,7 +12,7 @@ AgentLSTM::AgentLSTM(int64_t input_size, int64_t output_size, int64_t num_layers
   resetState();
 }
 
-torch::Tensor AgentLSTM::forward(const torch::Tensor& x) {
+torch::Tensor AgentLSTM::forward(torch::Tensor x) {
   // lstmは入力(input, (h_0, c_0))
   // inputのshapeは(seq_len, batch, input_size)
   // h_0, c_0は任意の引数で、状態を初期化できる
@@ -20,10 +21,13 @@ torch::Tensor AgentLSTM::forward(const torch::Tensor& x) {
 
   //実践的に入力は系列を1個ずつにバラしたものが入るのでshapeは(1, input_size_)
   //まずそれを直す
-  torch::Tensor input = x.view({1, 1, input_size_});
+  x = x.view({1, 1, input_size_});
+
+  // 1層目
+  x = first_layer_(x);
 
   // outputのshapeは(seq_len, batch, num_directions * hidden_size)
-  auto [output, h_and_c] = lstm_->forward(input, std::make_tuple(h_, c_));
+  auto [output, h_and_c] = lstm_->forward(x, std::make_tuple(h_, c_));
   std::tie(h_, c_) = h_and_c;
 
   output = final_layer_->forward(output);
@@ -43,7 +47,9 @@ torch::Tensor AgentLSTM::forwardSequence(const torch::Tensor& input) {
 
   // outputのshapeは(seq_len, batch, num_directions * hidden_size)
   const torch::Device& device = lstm_->parameters().front().device();
-  auto [output, h_and_c] = lstm_->forward(input.to(device));
+  torch::Tensor x = input.to(device);
+  x = first_layer_(x);
+  auto [output, h_and_c] = lstm_->forward(x);
   std::tie(h_, c_) = h_and_c;
 
   output = final_layer_->forward(output);

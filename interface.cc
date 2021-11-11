@@ -125,7 +125,6 @@ void Learn() {
   torch::optim::SGDOptions sgd_option(0.0f);
   sgd_option.momentum(0.9f);
   sgd_option.weight_decay(1e-4f);
-  std::vector<torch::Tensor> parameters;
   torch::optim::SGD optimizer(agent.Parameters(), sgd_option);
 
   for (int64_t step = 1; step <= kMaxStep; step++) {
@@ -167,6 +166,7 @@ void Learn() {
 
     optimizer.zero_grad();
     loss.backward();
+    torch::nn::utils::clip_grad_norm_(agent.Parameters(), 0.1);
     optimizer.step();
   }
 }
