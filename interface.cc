@@ -111,7 +111,7 @@ void Visualize() {
   }
 }
 
-void Learn() {
+void Learn(int64_t train_id) {
   State state;
   Agent agent;
   std::vector<float> reward_list;
@@ -126,6 +126,8 @@ void Learn() {
   sgd_option.momentum(0.9f);
   sgd_option.weight_decay(1e-4f);
   torch::optim::SGD optimizer(agent.Parameters(), sgd_option);
+
+  std::ofstream loss_log("loss_log_" + std::to_string(train_id) + ".txt");
 
   for (int64_t step = 1; step <= kMaxStep; step++) {
     state.Init();
@@ -151,6 +153,7 @@ void Learn() {
       float loss_average = std::accumulate(loss_list.begin(), loss_list.end(), 0.0f) / kAverageSize;
       float accuracy = std::accumulate(accuracy_list.begin(), accuracy_list.end(), 0.0f) / kAverageSize;
       std::cout << step << "\t" << accuracy << "\t" << reward_average << "\t" << loss_average << std::endl;
+      loss_log << step << "\t" << accuracy << "\t" << reward_average << "\t" << loss_average << std::endl;
       reward_list.clear();
       loss_list.clear();
       accuracy_list.clear();
