@@ -119,6 +119,13 @@ void Learn() {
   std::vector<float> accuracy_list;
   std::cout << std::fixed;
   constexpr int64_t kAverageSize = 200;
+  constexpr float learn_rate = 0.1f;
+  torch::optim::SGDOptions sgd_option(learn_rate);
+  sgd_option.momentum(0.9f);
+  sgd_option.weight_decay(1e-4f);
+  std::vector<torch::Tensor> parameters;
+  torch::optim::SGD optimizer(agent.Parameters(), sgd_option);
+
   for (int64_t step = 1; step <= 100000; step++) {
     state.Init();
     agent.ResetLSTM();
@@ -131,13 +138,6 @@ void Learn() {
         break;
       }
     }
-
-    constexpr float learn_rate = 0.1f;
-    torch::optim::SGDOptions sgd_option(learn_rate);
-    sgd_option.momentum(0.9f);
-    sgd_option.weight_decay(1e-4f);
-    std::vector<torch::Tensor> parameters;
-    torch::optim::SGD optimizer(agent.Parameters(), sgd_option);
 
     Episode episode = state.GetEpisode();
     torch::Tensor loss = agent.Train(episode);

@@ -1,8 +1,8 @@
 #include "state.h"
 
+#include <cassert>
 #include <random>
 #include <tuple>
-#include <cassert>
 
 State::State() : board_(kBoardWidth, std::vector<char>(kBoardWidth, '.')), player_positions_(kPlayerNum) { Init(); }
 
@@ -74,9 +74,16 @@ std::tuple<bool, float> State::Step(Action a) {
     //この場合、移動を止めて正解を答える行動ということ
     const int64_t answer = a - kMoveActionNum;
     const float reward = (answer == true_player_ && episode_.actions.size() != 1);
-    episode_.reward = reward / episode_.actions.size();
-    episode_.correctness = (answer == true_player_);
+    const bool corectness = (answer == true_player_);
+    episode_.reward = (corectness ? reward / episode_.actions.size() : -0.1);
+    episode_.correctness = corectness;
     return std::make_tuple(true, reward);
+  }
+
+  if (episode_.actions.size() >= 10) {
+    episode_.reward = -0.1;
+    episode_.correctness = 0;
+    return std::make_tuple(true, 0.0f);
   }
 
   std::mt19937_64 engine(std::random_device{}());
