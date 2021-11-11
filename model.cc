@@ -6,6 +6,8 @@ AgentLSTM::AgentLSTM(int64_t input_size, int64_t output_size, int64_t num_layers
   option.num_layers(num_layers);
   lstm_ = register_module("lstm_", torch::nn::LSTM(option));
   final_layer_ = register_module("final_layer_", torch::nn::Linear(hidden_size, output_size));
+  h_ = register_parameter("h_", torch::zeros({num_layers_, 1, hidden_size_}));
+  c_ = register_parameter("c_", torch::zeros({num_layers_, 1, hidden_size_}));
   resetState();
 }
 
@@ -30,8 +32,9 @@ torch::Tensor AgentLSTM::forward(const torch::Tensor& x) {
 }
 
 void AgentLSTM::resetState() {
-  h_ = torch::zeros({num_layers_, 1, hidden_size_});
-  c_ = torch::zeros({num_layers_, 1, hidden_size_});
+  const torch::Device& device = lstm_->parameters().front().device();
+  h_ = torch::zeros({num_layers_, 1, hidden_size_}).to(device);
+  c_ = torch::zeros({num_layers_, 1, hidden_size_}).to(device);
 }
 
 torch::Tensor AgentLSTM::forwardSequence(const torch::Tensor& input) {
@@ -39,7 +42,8 @@ torch::Tensor AgentLSTM::forwardSequence(const torch::Tensor& input) {
   // inputのshapeは(seq_len, batch, input_size)
 
   // outputのshapeは(seq_len, batch, num_directions * hidden_size)
-  auto [output, h_and_c] = lstm_->forward(input);
+  const torch::Device& device = lstm_->parameters().front().device();
+  auto [output, h_and_c] = lstm_->forward(input.to(device));
   std::tie(h_, c_) = h_and_c;
 
   output = final_layer_->forward(output);
