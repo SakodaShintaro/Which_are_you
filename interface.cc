@@ -88,8 +88,8 @@ void Visualize() {
   std::cout << "-------------------------------------" << std::endl;
 
   for (int64_t step = 1; step <= 10000000; step++) {
-    constexpr float learn_rate = 0.01f;
-    torch::optim::SGDOptions sgd_option(learn_rate);
+    constexpr float kBaseLearnRate = 0.01f;
+    torch::optim::SGDOptions sgd_option(kBaseLearnRate);
     sgd_option.momentum(0.9f);
     sgd_option.weight_decay(1e-4f);
     std::vector<torch::Tensor> parameters;
@@ -119,14 +119,16 @@ void Learn() {
   std::vector<float> accuracy_list;
   std::cout << std::fixed;
   constexpr int64_t kAverageSize = 200;
-  constexpr float learn_rate = 0.1f;
-  torch::optim::SGDOptions sgd_option(learn_rate);
+  constexpr int64_t kMaxStep = 10000;
+  constexpr int64_t kPeekStep = kMaxStep / 20;
+  constexpr float kBaseLearnRate = 1.0f;
+  torch::optim::SGDOptions sgd_option(0.0f);
   sgd_option.momentum(0.9f);
   sgd_option.weight_decay(1e-4f);
   std::vector<torch::Tensor> parameters;
   torch::optim::SGD optimizer(agent.Parameters(), sgd_option);
 
-  for (int64_t step = 1; step <= 100000; step++) {
+  for (int64_t step = 1; step <= kMaxStep; step++) {
     state.Init();
     agent.ResetLSTM();
     bool first_select = true;
@@ -153,6 +155,14 @@ void Learn() {
       reward_list.clear();
       loss_list.clear();
       accuracy_list.clear();
+    }
+
+    if (step <= kPeekStep) {
+      (dynamic_cast<torch::optim::SGDOptions&>(optimizer.param_groups().front().options())).lr() =
+          kBaseLearnRate * step / kPeekStep;
+    } else {
+      (dynamic_cast<torch::optim::SGDOptions&>(optimizer.param_groups().front().options())).lr() =
+          kBaseLearnRate * (kMaxStep - step) / (kMaxStep - kPeekStep);
     }
 
     optimizer.zero_grad();
