@@ -66,7 +66,7 @@ void State::Init() {
   episode_.Init();
 }
 
-std::tuple<bool, float> State::Step(Action a) {
+bool State::Step(Action a) {
   episode_.state_features.push_back(GetFeature());
   episode_.actions.push_back(a);
   pre_action_ = a;
@@ -77,13 +77,13 @@ std::tuple<bool, float> State::Step(Action a) {
     const bool corectness = (answer == true_player_);
     episode_.reward = (corectness ? reward / episode_.actions.size() : -0.1);
     episode_.correctness = corectness;
-    return std::make_tuple(true, reward);
+    return true;
   }
 
   if (episode_.actions.size() >= 10) {
     episode_.reward = -0.1;
     episode_.correctness = 0;
-    return std::make_tuple(true, 0.0f);
+    return true;
   }
 
   std::mt19937_64 engine(std::random_device{}());
@@ -103,7 +103,7 @@ std::tuple<bool, float> State::Step(Action a) {
       player_positions_[i].y = ni;
     }
   }
-  return std::make_tuple(false, 0.0f);
+  return false;
 }
 
 std::vector<float> State::GetFeature() const {

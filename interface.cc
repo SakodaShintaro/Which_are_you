@@ -75,7 +75,7 @@ void Visualize() {
     Action a = agent.SelectAction(state, first_select);
     std::cout << "action = " << a << std::endl;
     first_select = false;
-    auto [is_finish, reward] = state.Step(a);
+    const bool is_finish = state.Step(a);
     std::cout << state;
     if (is_finish) {
       break;
@@ -133,7 +133,7 @@ void Learn() {
     while (true) {
       Action a = agent.SelectAction(state, first_select);
       first_select = false;
-      auto [is_finish, reward] = state.Step(a);
+      const bool is_finish = state.Step(a);
       if (is_finish) {
         break;
       }

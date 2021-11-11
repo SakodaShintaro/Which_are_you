@@ -45,7 +45,7 @@ class State {
   State();
   friend std::ostream& operator<<(std::ostream& ost, const State& state);
   void Init();
-  std::tuple<bool, float> Step(Action a);
+  bool Step(Action a);
   std::vector<float> GetFeature() const;
   Episode GetEpisode() const;
 
