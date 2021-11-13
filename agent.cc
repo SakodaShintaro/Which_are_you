@@ -2,7 +2,7 @@
 
 #include <random>
 
-constexpr int64_t kInputSize = (kPlayerNum + 1) * State::kBoardSize + kAllActionNum;
+constexpr int64_t kInputSize = (kPlayerNum + 1) * State::kBoardSize + kMoveActionNum;
 constexpr int64_t kPolicyDim = kAllActionNum - 1;
 
 // 行動にはnull_moveも含まれているが、それを選択することはないので-1した値を方策の数とする

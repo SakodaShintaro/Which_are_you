@@ -107,8 +107,8 @@ bool State::Step(Action a) {
 }
 
 std::vector<float> State::GetFeature() const {
-  // 盤面に関する情報が(kPlayerNum + 1)×H×Wであり、行動に関する情報がkAllActionNum
-  std::vector<float> feature(kBoardSize * (kPlayerNum + 1) + kAllActionNum, 0);
+  // 盤面に関する情報が(kPlayerNum + 1)×H×Wであり、行動に関する情報がkMoveActionNum
+  std::vector<float> feature(kBoardSize * (kPlayerNum + 1) + kMoveActionNum, 0);
 
   // board C×H×Wの順番で並べる
   for (int64_t i = 0; i < kBoardWidth; i++) {
