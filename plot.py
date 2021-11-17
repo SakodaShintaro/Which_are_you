@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from os import sep
 import matplotlib.pyplot as plt
 import glob

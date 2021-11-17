@@ -9,6 +9,7 @@ constexpr int64_t kPolicyDim = kAllActionNum - 1;
 Agent::Agent() : lstm_(kInputSize, kPolicyDim) { lstm_.to(torch::Device(torch::kCUDA)); }
 
 Action Agent::SelectAction(const State& state, bool first_action) {
+  torch::NoGradGuard no_grad_guard;
   std::vector<float> curr_feature = state.GetFeature();
   const torch::Device& device = lstm_.parameters().front().device();
   torch::Tensor input_tensor = torch::tensor(curr_feature);
@@ -56,7 +57,7 @@ torch::Tensor Agent::Train(const Episode& episode) {
   torch::Tensor input_tensor = torch::tensor(input);
   assert(input.size() / episode_length == kInputSize);
   input_tensor = input_tensor.view({episode_length, 1, kInputSize});
-  torch::Tensor output = lstm_.forwardSequence(input_tensor);
+  torch::Tensor output = lstm_.forward(input_tensor);
 
   torch::Tensor loss = torch::zeros({1}).to(output.device());
   for (int64_t i = 0; i < episode_length; i++) {

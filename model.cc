@@ -19,9 +19,9 @@ torch::Tensor AgentLSTM::forward(torch::Tensor x) {
   // h_0, c_0のshapeは(num_layers_ * num_directions, batch, hidden_size_)
   //出力はoutput, (h_n, c_n)
 
-  //実践的に入力は系列を1個ずつにバラしたものが入るのでshapeは(1, input_size_)
-  //まずそれを直す
-  x = x.view({1, 1, input_size_});
+  const torch::Device& device = lstm_->parameters().front().device();
+  x = x.to(device);
+  x = x.view({-1, 1, input_size_});
 
   // 1層目
   x = first_layer_(x);
@@ -38,22 +38,6 @@ torch::Tensor AgentLSTM::forward(torch::Tensor x) {
 void AgentLSTM::resetState() {
   h_.fill_(0.0);
   c_.fill_(0.0);
-}
-
-torch::Tensor AgentLSTM::forwardSequence(const torch::Tensor& input) {
-  // lstmは入力(input, (h_0, c_0))
-  // inputのshapeは(seq_len, batch, input_size)
-
-  // outputのshapeは(seq_len, batch, num_directions * hidden_size)
-  const torch::Device& device = lstm_->parameters().front().device();
-  torch::Tensor x = input.to(device);
-  x = first_layer_(x);
-  auto [output, h_and_c] = lstm_->forward(x);
-  std::tie(h_, c_) = h_and_c;
-
-  output = final_layer_->forward(output);
-
-  return output;
 }
 
 std::vector<torch::Tensor> AgentLSTM::Parameters() {
