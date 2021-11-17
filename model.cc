@@ -7,8 +7,8 @@ AgentLSTM::AgentLSTM(int64_t input_size, int64_t output_size, int64_t num_layers
   option.num_layers(num_layers);
   lstm_ = register_module("lstm_", torch::nn::LSTM(option));
   final_layer_ = register_module("final_layer_", torch::nn::Linear(hidden_size, output_size));
-  h_ = register_parameter("h_", torch::zeros({num_layers_, 1, hidden_size_}));
-  c_ = register_parameter("c_", torch::zeros({num_layers_, 1, hidden_size_}));
+  h_ = register_parameter("h_", torch::zeros({num_layers_, 1, hidden_size_}), false);
+  c_ = register_parameter("c_", torch::zeros({num_layers_, 1, hidden_size_}), false);
   resetState();
 }
 
@@ -36,9 +36,8 @@ torch::Tensor AgentLSTM::forward(torch::Tensor x) {
 }
 
 void AgentLSTM::resetState() {
-  const torch::Device& device = lstm_->parameters().front().device();
-  h_ = torch::zeros({num_layers_, 1, hidden_size_}).to(device);
-  c_ = torch::zeros({num_layers_, 1, hidden_size_}).to(device);
+  h_.fill_(0.0);
+  c_.fill_(0.0);
 }
 
 torch::Tensor AgentLSTM::forwardSequence(const torch::Tensor& input) {
