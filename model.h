@@ -16,9 +16,6 @@ class AgentLSTM : public torch::nn::Module {
   // shape(seq_len, batch, input_size)のinputを入力として(seq_len, batch, output_size)をoutputする関数
   torch::Tensor forwardSequence(const torch::Tensor& input);
 
-  // パラメータを返す
-  std::vector<torch::Tensor> Parameters();
-
  private:
   int64_t input_size_;
   int64_t num_layers_;

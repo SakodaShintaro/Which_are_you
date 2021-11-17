@@ -39,14 +39,3 @@ void AgentLSTM::resetState() {
   h_.fill_(0.0);
   c_.fill_(0.0);
 }
-
-std::vector<torch::Tensor> AgentLSTM::Parameters() {
-  std::vector<torch::Tensor> parameters;
-  for (auto p : lstm_->parameters()) {
-    parameters.push_back(p);
-  }
-  for (auto p : final_layer_->parameters()) {
-    parameters.push_back(p);
-  }
-  return parameters;
-}

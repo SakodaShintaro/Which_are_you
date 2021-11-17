@@ -68,4 +68,4 @@ torch::Tensor Agent::Train(const Episode& episode) {
   return loss;
 }
 
-std::vector<torch::Tensor> Agent::Parameters() { return lstm_.Parameters(); }
+std::vector<torch::Tensor> Agent::Parameters() { return lstm_.parameters(); }
