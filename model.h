@@ -5,7 +5,7 @@
 
 class AgentLSTM : public torch::nn::Module {
  public:
-  AgentLSTM(int64_t input_size, int64_t output_size, int64_t num_layers = 1, int64_t hidden_size = 256);
+  AgentLSTM(int64_t input_size, int64_t output_size, int64_t num_layers = 1, int64_t hidden_size = 4);
 
   //入力を受けて1ステップ分LSTMの推論を進める関数:これを直に触って使うのはやめた方が良さそう
   torch::Tensor forward(torch::Tensor x);
