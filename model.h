@@ -20,9 +20,7 @@ class AgentLSTM : public torch::nn::Module {
   int64_t input_size_;
   int64_t num_layers_;
   int64_t hidden_size_;
-  torch::nn::Conv2d first_layer_{nullptr};
-  torch::nn::Linear action_encoder_{nullptr};
-  std::vector<torch::nn::Conv2d> conv_layers_;
+  torch::nn::Linear first_layer_{nullptr};
   torch::nn::LSTM lstm_{nullptr};
   torch::nn::Linear final_layer_{nullptr};
   torch::Tensor h_;
