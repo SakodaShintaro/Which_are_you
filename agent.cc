@@ -15,8 +15,8 @@ Action Agent::SelectAction(const State& state, bool first_action) {
   torch::Tensor input_tensor = torch::tensor(curr_feature);
   input_tensor = input_tensor.view({1, 1, kInputSize});
   input_tensor = input_tensor.to(device);
-  torch::Tensor output = lstm_.forward(input_tensor);
-  output = output.flatten();
+  auto [policy, value] = lstm_.forward(input_tensor);
+  policy = policy.flatten();
 
   std::mt19937_64 engine(std::random_device{}());
   std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -24,15 +24,15 @@ Action Agent::SelectAction(const State& state, bool first_action) {
 
   if (first_action) {
     // 初手で回答することは禁止
-    output = output.index({torch::indexing::Slice(0, kMoveActionNum)});
-    torch::Tensor policy = torch::softmax(output, 0);
+    policy = policy.index({torch::indexing::Slice(0, kMoveActionNum)});
+    policy = torch::softmax(policy, 0);
     for (int64_t i = 0; i < kMoveActionNum; i++) {
       if ((prob -= policy[i].item<float>()) <= 0) {
         return Action(i);
       }
     }
   } else {
-    torch::Tensor policy = torch::softmax(output, 0);
+    policy = torch::softmax(policy, 0);
     for (int64_t i = 0; i < kPolicyDim; i++) {
       if ((prob -= policy[i].item<float>()) <= 0) {
         return Action(i);
@@ -44,7 +44,7 @@ Action Agent::SelectAction(const State& state, bool first_action) {
   std::exit(1);
 }
 
-torch::Tensor Agent::Train(const Episode& episode) {
+std::tuple<torch::Tensor, torch::Tensor> Agent::Train(const Episode& episode) {
   // LSTMに与える入力を作る
   std::vector<float> input;
   const int64_t episode_length = episode.actions.size();
@@ -57,15 +57,20 @@ torch::Tensor Agent::Train(const Episode& episode) {
   torch::Tensor input_tensor = torch::tensor(input);
   assert(input.size() / episode_length == kInputSize);
   input_tensor = input_tensor.view({episode_length, 1, kInputSize});
-  torch::Tensor output = lstm_.forward(input_tensor);
+  auto [policy, value] = lstm_.forward(input_tensor);
 
-  torch::Tensor loss = torch::zeros({1}).to(output.device());
+  torch::Tensor policy_loss = torch::zeros({1}).to(policy.device());
+  torch::Tensor value_loss = torch::zeros({1}).to(policy.device());
   for (int64_t i = 0; i < episode_length; i++) {
-    torch::Tensor curr_log_policy = torch::log_softmax(output[i], 1);
-    loss -= curr_log_policy[0][episode.actions[i]] * episode.reward;
+    // policy lossを計算
+    torch::Tensor curr_log_policy = torch::log_softmax(policy[i], 1);
+    policy_loss -= curr_log_policy[0][episode.actions[i]] * episode.reward;
+
+    // value lossを計算
+    value_loss = torch::pow(value[i] - episode.reward, 2);
   }
 
-  return loss;
+  return std::make_tuple(policy_loss, value_loss);
 }
 
 std::vector<torch::Tensor> Agent::Parameters() { return lstm_.parameters(); }

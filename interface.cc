@@ -95,10 +95,10 @@ void Visualize() {
     std::vector<torch::Tensor> parameters;
     torch::optim::SGD optimizer(agent.Parameters(), sgd_option);
 
-    torch::Tensor loss = agent.Train(episode);
+    auto [policy_loss, value_loss] = agent.Train(episode);
 
     optimizer.zero_grad();
-    loss.backward();
+    policy_loss.backward();
     optimizer.step();
 
     // 学習後の結果を見る
@@ -115,7 +115,8 @@ void Learn(int64_t train_id) {
   State state;
   Agent agent;
   std::vector<float> reward_list;
-  std::vector<float> loss_list;
+  std::vector<float> policy_loss_list;
+  std::vector<float> value_loss_list;
   std::vector<float> accuracy_list;
   std::cout << std::fixed;
   constexpr int64_t kAverageSize = 200;
@@ -143,19 +144,25 @@ void Learn(int64_t train_id) {
     }
 
     Episode episode = state.GetEpisode();
-    torch::Tensor loss = agent.Train(episode);
+    auto [policy_loss, value_loss] = agent.Train(episode);
     reward_list.push_back(episode.reward);
-    loss_list.push_back(loss.item<float>());
+    policy_loss_list.push_back(policy_loss.item<float>());
+    value_loss_list.push_back(value_loss.item<float>());
     accuracy_list.push_back(episode.correctness);
 
     if (reward_list.size() == kAverageSize) {
       float reward_average = std::accumulate(reward_list.begin(), reward_list.end(), 0.0f) / kAverageSize;
-      float loss_average = std::accumulate(loss_list.begin(), loss_list.end(), 0.0f) / kAverageSize;
+      float policy_loss_average =
+          std::accumulate(policy_loss_list.begin(), policy_loss_list.end(), 0.0f) / kAverageSize;
+      float value_loss_average = std::accumulate(value_loss_list.begin(), value_loss_list.end(), 0.0f) / kAverageSize;
       float accuracy = std::accumulate(accuracy_list.begin(), accuracy_list.end(), 0.0f) / kAverageSize;
-      std::cout << step << "\t" << accuracy << "\t" << reward_average << "\t" << loss_average << std::endl;
-      loss_log << step << "\t" << accuracy << "\t" << reward_average << "\t" << loss_average << std::endl;
+      std::cout << step << "\t" << accuracy << "\t" << reward_average << "\t" << policy_loss_average << "\t"
+                << value_loss_average << std::endl;
+      loss_log << step << "\t" << accuracy << "\t" << reward_average << "\t" << policy_loss_average << "\t"
+               << value_loss_average << std::endl;
       reward_list.clear();
-      loss_list.clear();
+      policy_loss_list.clear();
+      value_loss_list.clear();
       accuracy_list.clear();
     }
 
@@ -168,7 +175,7 @@ void Learn(int64_t train_id) {
     }
 
     optimizer.zero_grad();
-    loss.backward();
+    (policy_loss + value_loss).backward();
     torch::nn::utils::clip_grad_norm_(agent.Parameters(), 0.1);
     optimizer.step();
   }
