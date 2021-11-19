@@ -11,7 +11,7 @@ loss_log_list = natsort.natsorted(loss_log_list)
 
 for i, loss_log in enumerate(loss_log_list):
     df = pd.read_csv(loss_log, sep="\t", header=None)
-    df = df.set_axis(["step", "accuracy", "reward", "loss"], axis="columns")
+    df = df.set_axis(["step", "accuracy", "reward", "policy_loss", "value_loss"], axis="columns")
     plt.plot(df["step"], df["accuracy"], label=f"{i + 1:2d}回目の試行")
 
 plt.xlabel("Learning Step")
