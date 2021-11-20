@@ -75,7 +75,7 @@ bool State::Step(Action a) {
     const int64_t answer = a - kMoveActionNum;
     const float reward = (answer == true_player_ && episode_.actions.size() != 1);
     const bool corectness = (answer == true_player_);
-    episode_.reward = (corectness ? reward / episode_.actions.size() : -0.1);
+    episode_.reward = (corectness ? reward / episode_.actions.size() : 0);
     episode_.correctness = corectness;
     return true;
   }
@@ -108,7 +108,7 @@ bool State::Step(Action a) {
 
 std::vector<float> State::GetFeature() const {
   // 盤面に関する情報が(kPlayerNum + 1)×H×Wであり、行動に関する情報がkMoveActionNum
-  std::vector<float> feature(kBoardSize * (kPlayerNum + 1) + kMoveActionNum, 0);
+  std::vector<float> feature(kInputDim, 0);
 
   // board C×H×Wの順番で並べる
   for (int64_t i = 0; i < kBoardWidth; i++) {

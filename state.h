@@ -57,4 +57,6 @@ class State {
   Episode episode_;
 };
 
+static constexpr int64_t kInputDim = State::kBoardSize * (kPlayerNum + 1) + kAllActionNum;
+
 #endif
