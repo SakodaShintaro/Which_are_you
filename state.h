@@ -5,18 +5,17 @@
 #include <iostream>
 #include <vector>
 
+static constexpr int64_t kPlayerNum = 2;
+
 enum Action {
   kUp,
   kRight,
   kDown,
   kLeft,
   kMoveActionNum,
-  kAnswerA = kMoveActionNum,
-  kAnswerB,
-  kNullAction,
+  kNullAction = kMoveActionNum + kPlayerNum,
   kAllActionNum,
 };
-static constexpr int64_t kPlayerNum = 2;
 
 constexpr int64_t kDi[kMoveActionNum] = {-1, 0, 1, 0};
 constexpr int64_t kDj[kMoveActionNum] = {0, 1, 0, -1};
