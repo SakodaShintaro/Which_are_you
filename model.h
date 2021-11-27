@@ -18,6 +18,7 @@ class Network : public torch::nn::Module {
   int64_t num_layers_;
   int64_t hidden_size_;
   torch::nn::Linear first_layer_{nullptr};
+  torch::Tensor positional_encoding_;
   torch::nn::TransformerEncoder transformer_{nullptr};
   torch::nn::Linear policy_head_{nullptr};
   torch::nn::Linear value_head_{nullptr};

@@ -4,6 +4,7 @@ Network::Network(int64_t input_size, int64_t output_size, int64_t num_layers, in
     : input_size_(input_size), num_layers_(num_layers), hidden_size_(hidden_size) {
   using namespace torch::nn;
   first_layer_ = register_module("first_layer_", Linear(input_size, hidden_size));
+  positional_encoding_ = register_parameter("positional_encoding_", torch::zeros({10, 1, hidden_size}));
   TransformerEncoderLayer layer = TransformerEncoderLayer(hidden_size, 4);
   transformer_ = register_module("transformer_", TransformerEncoder(layer, 1));
   policy_head_ = register_module("policy_head_", Linear(hidden_size, output_size));
@@ -27,6 +28,9 @@ std::tuple<torch::Tensor, torch::Tensor> Network::forward(torch::Tensor x) {
 
   // 1層目
   x = first_layer_(x);
+
+  // 位置エンコーディングを追加
+  x = x + positional_encoding_.slice(0, 0, seq_len);
 
   // maskを作る
   torch::Tensor mask = torch::ones({seq_len, seq_len}).to(device);
