@@ -5,7 +5,7 @@
 
 class Network : public torch::nn::Module {
  public:
-  Network(int64_t input_size, int64_t output_size, int64_t num_layers = 1, int64_t hidden_size = 32);
+  Network(int64_t input_size, int64_t output_size, int64_t num_layers = 1, int64_t hidden_size = 64);
 
   // shape(seq_len, batch, input_size)のinputを入力として(seq_len, batch, output_size)をoutputする関数
   std::tuple<torch::Tensor, torch::Tensor> forward(torch::Tensor x);

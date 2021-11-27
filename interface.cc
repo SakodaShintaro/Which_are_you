@@ -122,7 +122,7 @@ void Learn(int64_t train_id) {
   constexpr int64_t kAverageSize = 200;
   constexpr int64_t kMaxStep = 10000;
   constexpr int64_t kPeekStep = kMaxStep / 20;
-  constexpr float kBaseLearnRate = 0.1f;
+  constexpr float kBaseLearnRate = 0.01f;
   torch::optim::SGDOptions sgd_option(0.0f);
   sgd_option.momentum(0.9f);
   sgd_option.weight_decay(1e-4f);
