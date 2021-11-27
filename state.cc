@@ -31,28 +31,19 @@ void State::Init() {
 
   // 各プレイヤーの位置をランダムに決定する
   std::mt19937_64 engine(std::random_device{}());
-  // std::uniform_int_distribution<int64_t> dist_pos(1, kBoardWidth - 2);
-  // player_positions_.resize(kPlayerNum);
-  // for (int64_t i = 0; i < kPlayerNum; i++) {
-  //   while (true) {
-  //     int64_t x = dist_pos(engine);
-  //     int64_t y = dist_pos(engine);
-  //     if (board_[y][x] == '.') {
-  //       player_positions_[i].x = x;
-  //       player_positions_[i].y = y;
-  //       board_[y][x] = 'A' + i;
-  //       break;
-  //     }
-  //   }
-  // }
+  std::uniform_int_distribution<int64_t> dist_pos(1, kBoardWidth - 2);
   player_positions_.resize(kPlayerNum);
   for (int64_t i = 0; i < kPlayerNum; i++) {
-    int64_t x = (i == 0 ? 1 : kBoardWidth - 2);
-    int64_t y = kBoardWidth / 2;
-    assert(board_[y][x] == '.');
-    player_positions_[i].x = x;
-    player_positions_[i].y = y;
-    board_[y][x] = 'A' + i;
+    while (true) {
+      int64_t x = dist_pos(engine);
+      int64_t y = dist_pos(engine);
+      if (board_[y][x] == '.') {
+        player_positions_[i].x = x;
+        player_positions_[i].y = y;
+        board_[y][x] = 'A' + i;
+        break;
+      }
+    }
   }
 
   // どのプレイヤーが真のプレイヤーか決定
@@ -75,7 +66,7 @@ bool State::Step(Action a) {
     const int64_t answer = a - kMoveActionNum;
     const float reward = (answer == true_player_ && episode_.actions.size() != 1);
     const bool corectness = (answer == true_player_);
-    episode_.reward = (corectness ? reward / episode_.actions.size() : -0.1);
+    episode_.reward = (corectness ? reward / (episode_.actions.size() - 1) : -0.1);
     episode_.correctness = corectness;
     return true;
   }
