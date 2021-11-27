@@ -1,35 +1,41 @@
 #include "model.h"
 
-AgentLSTM::AgentLSTM(int64_t input_size, int64_t output_size, int64_t num_layers, int64_t hidden_size)
+Network::Network(int64_t input_size, int64_t output_size, int64_t num_layers, int64_t hidden_size)
     : input_size_(input_size), num_layers_(num_layers), hidden_size_(hidden_size) {
-  first_layer_ = register_module("first_layer_", torch::nn::Linear(input_size, hidden_size));
-  torch::nn::LSTMOptions option(hidden_size, hidden_size);
-  option.num_layers(num_layers);
-  lstm_ = register_module("lstm_", torch::nn::LSTM(option));
-  policy_head_ = register_module("policy_head_", torch::nn::Linear(hidden_size, output_size));
-  value_head_ = register_module("value_head_", torch::nn::Linear(hidden_size, 1));
-  h_ = register_parameter("h_", torch::zeros({num_layers_, 1, hidden_size_}), false);
-  c_ = register_parameter("c_", torch::zeros({num_layers_, 1, hidden_size_}), false);
+  using namespace torch::nn;
+  first_layer_ = register_module("first_layer_", Linear(input_size, hidden_size));
+  TransformerEncoderLayer layer = TransformerEncoderLayer(hidden_size, 4);
+  transformer_ = register_module("transformer_", TransformerEncoder(layer, 1));
+  policy_head_ = register_module("policy_head_", Linear(hidden_size, output_size));
+  value_head_ = register_module("value_head_", Linear(hidden_size, 1));
   resetState();
 }
 
-std::tuple<torch::Tensor, torch::Tensor> AgentLSTM::forward(torch::Tensor x) {
-  // lstmは入力(input, (h_0, c_0))
-  // inputのshapeは(seq_len, batch, input_size)
-  // h_0, c_0は任意の引数で、状態を初期化できる
-  // h_0, c_0のshapeは(num_layers_ * num_directions, batch, hidden_size_)
-  //出力はoutput, (h_n, c_n)
+std::tuple<torch::Tensor, torch::Tensor> Network::forward(torch::Tensor x) {
+  // xのshapeは(seq_len, batch, input_size)
+  // 出力shape policy:(seq_len, batch, POLICY_DIM) value(seq_len, batch, 1)
 
-  const torch::Device& device = lstm_->parameters().front().device();
-  x = x.to(device);
+  const int64_t seq_len = x.size(0);
+
+  const torch::Device& device = transformer_->parameters().front().device();
   x = x.view({-1, 1, input_size_});
+
+  // 過去の情報と結合
+  input_history_.push_back(x);
+  x = torch::cat(input_history_, 0);
+  x = x.to(device);
 
   // 1層目
   x = first_layer_(x);
 
-  // outputのshapeは(seq_len, batch, num_directions * hidden_size)
-  auto [output, h_and_c] = lstm_->forward(x, std::make_tuple(h_, c_));
-  std::tie(h_, c_) = h_and_c;
+  // maskを作る
+  torch::Tensor mask = torch::ones({seq_len, seq_len}).to(device);
+  mask = torch::triu(mask);
+  mask = mask.transpose(0, 1);
+
+  torch::Tensor output = transformer_->forward(x, mask);
+  const int64_t output_len = output.size(0);
+  output = output.slice(0, output_len - seq_len, output_len);
 
   torch::Tensor policy = policy_head_->forward(output);
   torch::Tensor value = value_head_->forward(output);
@@ -37,7 +43,4 @@ std::tuple<torch::Tensor, torch::Tensor> AgentLSTM::forward(torch::Tensor x) {
   return std::make_tuple(policy, value);
 }
 
-void AgentLSTM::resetState() {
-  h_.fill_(0.0);
-  c_.fill_(0.0);
-}
+void Network::resetState() { input_history_.clear(); }

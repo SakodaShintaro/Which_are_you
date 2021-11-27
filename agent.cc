@@ -5,16 +5,16 @@
 constexpr int64_t kPolicyDim = kAllActionNum - 1;
 
 // 行動にはnull_moveも含まれているが、それを選択することはないので-1した値を方策の数とする
-Agent::Agent() : lstm_(kInputDim, kPolicyDim) { lstm_.to(torch::Device(torch::kCUDA)); }
+Agent::Agent() : network_(kInputDim, kPolicyDim) { network_.to(torch::Device(torch::kCUDA)); }
 
 Action Agent::SelectAction(const State& state, bool first_action) {
   torch::NoGradGuard no_grad_guard;
   std::vector<float> curr_feature = state.GetFeature();
-  const torch::Device& device = lstm_.parameters().front().device();
+  const torch::Device& device = network_.parameters().front().device();
   torch::Tensor input_tensor = torch::tensor(curr_feature);
   input_tensor = input_tensor.view({1, 1, kInputDim});
   input_tensor = input_tensor.to(device);
-  auto [policy, value] = lstm_.forward(input_tensor);
+  auto [policy, value] = network_.forward(input_tensor);
   policy = policy.flatten();
 
   std::mt19937_64 engine(std::random_device{}());
@@ -56,7 +56,8 @@ std::tuple<torch::Tensor, torch::Tensor> Agent::Train(const Episode& episode) {
   torch::Tensor input_tensor = torch::tensor(input);
   assert(input.size() / episode_length == kInputDim);
   input_tensor = input_tensor.view({episode_length, 1, kInputDim});
-  auto [policy, value] = lstm_.forward(input_tensor);
+  network_.resetState();
+  auto [policy, value] = network_.forward(input_tensor);
 
   torch::Tensor policy_loss = torch::zeros({1}).to(policy.device());
   torch::Tensor value_loss = torch::zeros({1}).to(policy.device());
@@ -72,4 +73,4 @@ std::tuple<torch::Tensor, torch::Tensor> Agent::Train(const Episode& episode) {
   return std::make_tuple(policy_loss, value_loss);
 }
 
-std::vector<torch::Tensor> Agent::Parameters() { return lstm_.parameters(); }
+std::vector<torch::Tensor> Agent::Parameters() { return network_.parameters(); }

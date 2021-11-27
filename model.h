@@ -3,9 +3,9 @@
 
 #include <torch/torch.h>
 
-class AgentLSTM : public torch::nn::Module {
+class Network : public torch::nn::Module {
  public:
-  AgentLSTM(int64_t input_size, int64_t output_size, int64_t num_layers = 1, int64_t hidden_size = 8);
+  Network(int64_t input_size, int64_t output_size, int64_t num_layers = 1, int64_t hidden_size = 32);
 
   // shape(seq_len, batch, input_size)のinputを入力として(seq_len, batch, output_size)をoutputする関数
   std::tuple<torch::Tensor, torch::Tensor> forward(torch::Tensor x);
@@ -18,11 +18,10 @@ class AgentLSTM : public torch::nn::Module {
   int64_t num_layers_;
   int64_t hidden_size_;
   torch::nn::Linear first_layer_{nullptr};
-  torch::nn::LSTM lstm_{nullptr};
+  torch::nn::TransformerEncoder transformer_{nullptr};
   torch::nn::Linear policy_head_{nullptr};
   torch::nn::Linear value_head_{nullptr};
-  torch::Tensor h_;
-  torch::Tensor c_;
+  std::vector<torch::Tensor> input_history_;
 };
 
 #endif  // WHICH_ARE_YOU_MODEL_H_

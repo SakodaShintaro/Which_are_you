@@ -10,10 +10,10 @@ class Agent {
   Action SelectAction(const State& state, bool first_action);
   std::tuple<torch::Tensor, torch::Tensor> Train(const Episode& episode);
   std::vector<torch::Tensor> Parameters();
-  void ResetLSTM() { lstm_.resetState(); }
+  void ResetLSTM() { network_.resetState(); }
 
  private:
-  AgentLSTM lstm_;
+  Network network_;
 };
 
 #endif

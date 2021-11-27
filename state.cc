@@ -75,7 +75,7 @@ bool State::Step(Action a) {
     const int64_t answer = a - kMoveActionNum;
     const float reward = (answer == true_player_ && episode_.actions.size() != 1);
     const bool corectness = (answer == true_player_);
-    episode_.reward = (corectness ? reward / episode_.actions.size() : 0);
+    episode_.reward = (corectness ? reward / episode_.actions.size() : -0.1);
     episode_.correctness = corectness;
     return true;
   }
