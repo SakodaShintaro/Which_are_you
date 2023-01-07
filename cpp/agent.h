@@ -7,7 +7,7 @@
 class Agent {
  public:
   Agent();
-  Action SelectAction(const State& state, bool first_action);
+  Action SelectAction(const State& state);
   std::tuple<torch::Tensor, torch::Tensor> Train(const Episode& episode);
   std::vector<torch::Tensor> Parameters();
   void ResetLSTM() { network_.resetState(); }

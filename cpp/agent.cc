@@ -6,7 +6,7 @@ constexpr int64_t kPolicyDim = kMoveActionNum;
 
 Agent::Agent() : network_(kInputDim, kPolicyDim) { network_.to(torch::Device(torch::kCUDA)); }
 
-Action Agent::SelectAction(const State& state, bool first_action) {
+Action Agent::SelectAction(const State& state) {
   torch::NoGradGuard no_grad_guard;
   std::vector<float> curr_feature = state.GetFeature();
   const torch::Device& device = network_.parameters().front().device();
@@ -20,25 +20,14 @@ Action Agent::SelectAction(const State& state, bool first_action) {
   std::uniform_real_distribution<float> dist(0.0f, 1.0f);
   float prob = dist(engine);
 
-  if (first_action) {
-    // 初手で回答することは禁止
-    policy = policy.index({torch::indexing::Slice(0, kMoveActionNum)});
-    policy = torch::softmax(policy, 0);
-    for (int64_t i = 0; i < kMoveActionNum; i++) {
-      if ((prob -= policy[i].item<float>()) <= 0) {
-        return Action(i);
-      }
-    }
-  } else {
-    policy = torch::softmax(policy, 0);
-    for (int64_t i = 0; i < kPolicyDim; i++) {
-      if ((prob -= policy[i].item<float>()) <= 0) {
-        return Action(i);
-      }
+  policy = torch::softmax(policy, 0);
+  for (int64_t i = 0; i < kPolicyDim; i++) {
+    if ((prob -= policy[i].item<float>()) <= 0) {
+      return Action(i);
     }
   }
 
-  //ここに到達することはありえないはず
+  // ここに到達することはありえないはず
   std::exit(1);
 }
 

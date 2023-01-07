@@ -78,11 +78,9 @@ void Visualize() {
   state.Init();
   agent.ResetLSTM();
   std::cout << state;
-  bool first_select = true;
   while (true) {
-    Action a = agent.SelectAction(state, first_select);
+    Action a = agent.SelectAction(state);
     std::cout << "action = " << a << std::endl;
-    first_select = false;
     const bool is_finish = state.Step(a);
     std::cout << state;
     if (is_finish) {
@@ -111,7 +109,7 @@ void Visualize() {
     // 学習後の結果を見る
     state.Init();
     agent.ResetLSTM();
-    Action a = agent.SelectAction(state, true);
+    Action a = agent.SelectAction(state);
 
     int64_t wait;
     std::cin >> wait;
@@ -135,14 +133,15 @@ void Learn(int64_t train_id) {
   torch::optim::SGD optimizer(agent.Parameters(), sgd_option);
 
   std::ofstream loss_log("loss_log_" + std::to_string(train_id) + ".txt");
+  const std::string header = "step\treward_average\tpolicy_loss_average\tvalue_loss_average";
+  loss_log << header << std::endl;
+  std::cout << header << std::endl;
 
   for (int64_t step = 1; step <= kMaxStep; step++) {
     state.Init();
     agent.ResetLSTM();
-    bool first_select = true;
     while (true) {
-      Action a = agent.SelectAction(state, first_select);
-      first_select = false;
+      Action a = agent.SelectAction(state);
       const bool is_finish = state.Step(a);
       if (is_finish) {
         break;
