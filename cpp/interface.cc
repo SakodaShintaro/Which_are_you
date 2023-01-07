@@ -16,7 +16,7 @@ void PrintEpisode(const Episode& episode) {
       }
     }
     std::cout << "pre_action = ";
-    for (int64_t k = 0; k < kAllActionNum; k++) {
+    for (int64_t k = 0; k < kMoveActionNum; k++) {
       std::cout << episode.state_features[i][(kPlayerNum + 1) * State::kBoardSize + k] << " ";
     }
     std::cout << std::endl;
@@ -53,12 +53,20 @@ void Manual() {
       case 'L':
         a = kLeft;
         break;
+      case 'S':
+        a = kStay;
+        break;
 
       default:
+        std::cout << "Unknown operation: " << op << std::endl;
         std::exit(1);
         break;
     }
-    state.Step(a);
+    const bool terminal = state.Step(a);
+    if (terminal) {
+      PrintEpisode(state.GetEpisode());
+      break;
+    }
   }
 }
 
@@ -84,7 +92,6 @@ void Visualize() {
 
   Episode episode = state.GetEpisode();
   std::cout << "reward = " << episode.reward << std::endl;
-  std::cout << "correctness = " << episode.correctness << std::endl;
   std::cout << "-------------------------------------" << std::endl;
 
   for (int64_t step = 1; step <= 10000000; step++) {
@@ -117,7 +124,6 @@ void Learn(int64_t train_id) {
   std::vector<float> reward_list;
   std::vector<float> policy_loss_list;
   std::vector<float> value_loss_list;
-  std::vector<float> accuracy_list;
   std::cout << std::fixed;
   constexpr int64_t kAverageSize = 200;
   constexpr int64_t kMaxStep = 10000;
@@ -148,22 +154,19 @@ void Learn(int64_t train_id) {
     reward_list.push_back(episode.reward);
     policy_loss_list.push_back(policy_loss.item<float>());
     value_loss_list.push_back(value_loss.item<float>());
-    accuracy_list.push_back(episode.correctness);
 
     if (reward_list.size() == kAverageSize) {
       float reward_average = std::accumulate(reward_list.begin(), reward_list.end(), 0.0f) / kAverageSize;
       float policy_loss_average =
           std::accumulate(policy_loss_list.begin(), policy_loss_list.end(), 0.0f) / kAverageSize;
       float value_loss_average = std::accumulate(value_loss_list.begin(), value_loss_list.end(), 0.0f) / kAverageSize;
-      float accuracy = std::accumulate(accuracy_list.begin(), accuracy_list.end(), 0.0f) / kAverageSize;
-      std::cout << step << "\t" << accuracy << "\t" << reward_average << "\t" << policy_loss_average << "\t"
-                << value_loss_average << std::endl;
-      loss_log << step << "\t" << accuracy << "\t" << reward_average << "\t" << policy_loss_average << "\t"
-               << value_loss_average << std::endl;
+      std::cout << step << "\t" << reward_average << "\t" << policy_loss_average << "\t" << value_loss_average
+                << std::endl;
+      loss_log << step << "\t" << reward_average << "\t" << policy_loss_average << "\t" << value_loss_average
+               << std::endl;
       reward_list.clear();
       policy_loss_list.clear();
       value_loss_list.clear();
-      accuracy_list.clear();
     }
 
     if (step <= kPeekStep) {

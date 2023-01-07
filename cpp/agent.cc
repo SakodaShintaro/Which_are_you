@@ -2,9 +2,8 @@
 
 #include <random>
 
-constexpr int64_t kPolicyDim = kAllActionNum - 1;
+constexpr int64_t kPolicyDim = kMoveActionNum;
 
-// 行動にはnull_moveも含まれているが、それを選択することはないので-1した値を方策の数とする
 Agent::Agent() : network_(kInputDim, kPolicyDim) { network_.to(torch::Device(torch::kCUDA)); }
 
 Action Agent::SelectAction(const State& state, bool first_action) {

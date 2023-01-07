@@ -7,10 +7,15 @@
 State::State() : board_(kBoardWidth, std::vector<char>(kBoardWidth, '.')), player_positions_(kPlayerNum) { Init(); }
 
 std::ostream& operator<<(std::ostream& ost, const State& state) {
+  ost << "Turn: " << state.episode_.actions.size() << std::endl;
   ost << "真のプレイヤー: " << char('A' + state.true_player_) << std::endl;
   for (int64_t i = 0; i < State::kBoardWidth; i++) {
     for (int64_t j = 0; j < State::kBoardWidth; j++) {
-      ost << state.board_[i][j];
+      if (i == state.good_position_.y && j == state.good_position_.x) {
+        ost << '*';
+      } else {
+        ost << state.board_[i][j];
+      }
     }
     ost << std::endl;
   }
@@ -46,12 +51,16 @@ void State::Init() {
     }
   }
 
+  // 正解位置をランダムに初期化する
+  good_position_.x = dist_pos(engine);
+  good_position_.y = dist_pos(engine);
+
   // どのプレイヤーが真のプレイヤーか決定
   std::uniform_int_distribution<int64_t> dist_player(0, kPlayerNum - 1);
   true_player_ = dist_player(engine);
 
   // 前の行動を初期化
-  pre_action_ = kNullAction;
+  pre_action_ = kStay;
 
   // エピソード初期化
   episode_.Init();
@@ -61,19 +70,13 @@ bool State::Step(Action a) {
   episode_.state_features.push_back(GetFeature());
   episode_.actions.push_back(a);
   pre_action_ = a;
-  if (a >= kMoveActionNum) {
-    //この場合、移動を止めて正解を答える行動ということ
-    const int64_t answer = a - kMoveActionNum;
-    const float reward = (answer == true_player_ && episode_.actions.size() != 1);
-    const bool correctness = (answer == true_player_);
-    episode_.reward = (correctness ? reward / (episode_.actions.size() - 1) : -0.1);
-    episode_.correctness = correctness;
-    return true;
+
+  // 正しい位置に居る場合は報酬加点
+  if (player_positions_[true_player_] == good_position_) {
+    episode_.reward += 1.0;
   }
 
   if (episode_.actions.size() >= 10) {
-    episode_.reward = -0.1;
-    episode_.correctness = 0;
     return true;
   }
 

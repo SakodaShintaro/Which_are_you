@@ -12,9 +12,8 @@ enum Action {
   kRight,
   kDown,
   kLeft,
+  kStay,
   kMoveActionNum,
-  kNullAction = kMoveActionNum + kPlayerNum,
-  kAllActionNum,
 };
 
 constexpr int64_t kDi[kMoveActionNum] = {-1, 0, 1, 0};
@@ -24,16 +23,17 @@ enum SquareKind { kEmpty, kWall };
 
 struct Position {
   int64_t x, y;
+  bool operator==(const Position& rhs) const { return (x == rhs.x && y == rhs.y); }
 };
 
 struct Episode {
   std::vector<std::vector<float>> state_features;
   std::vector<Action> actions;
   float reward;
-  float correctness;
   void Init() {
     state_features.clear();
     actions.clear();
+    reward = 0.0f;
   }
 };
 
@@ -54,8 +54,9 @@ class State {
   int64_t true_player_;
   Action pre_action_;
   Episode episode_;
+  Position good_position_;
 };
 
-static constexpr int64_t kInputDim = State::kBoardSize * (kPlayerNum + 1) + kAllActionNum;
+static constexpr int64_t kInputDim = State::kBoardSize * (kPlayerNum + 1) + kMoveActionNum;
 
 #endif
