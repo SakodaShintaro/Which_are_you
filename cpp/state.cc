@@ -65,9 +65,9 @@ bool State::Step(Action a) {
     //この場合、移動を止めて正解を答える行動ということ
     const int64_t answer = a - kMoveActionNum;
     const float reward = (answer == true_player_ && episode_.actions.size() != 1);
-    const bool corectness = (answer == true_player_);
-    episode_.reward = (corectness ? reward / (episode_.actions.size() - 1) : -0.1);
-    episode_.correctness = corectness;
+    const bool correctness = (answer == true_player_);
+    episode_.reward = (correctness ? reward / (episode_.actions.size() - 1) : -0.1);
+    episode_.correctness = correctness;
     return true;
   }
 
