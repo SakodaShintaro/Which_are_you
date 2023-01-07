@@ -57,6 +57,6 @@ class State {
   Position good_position_;
 };
 
-static constexpr int64_t kInputDim = State::kBoardSize * (kPlayerNum + 1) + kMoveActionNum;
+static constexpr int64_t kInputDim = State::kBoardSize * (kPlayerNum + 2) + kMoveActionNum;
 
 #endif

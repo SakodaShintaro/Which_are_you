@@ -101,7 +101,10 @@ bool State::Step(Action a) {
 }
 
 std::vector<float> State::GetFeature() const {
-  // 盤面に関する情報が(kPlayerNum + 1)×H×Wであり、行動に関する情報がkMoveActionNum
+  // 盤面に関する情報が(kPlayerNum + 2)×H×Wであり、行動に関する情報がkMoveActionNum
+  // 0ch ~ (kPlayerNum - 1)ch : プレイヤーの位置だけ1
+  // (kPlayerNum) ch : 壁
+  // (kPlayerNum + 1) ch : 正解位置
   std::vector<float> feature(kInputDim, 0);
 
   // board C×H×Wの順番で並べる
@@ -122,8 +125,11 @@ std::vector<float> State::GetFeature() const {
     }
   }
 
+  const int64_t index = good_position_.y * kBoardWidth + good_position_.x;
+  feature[(kPlayerNum + 1) * kBoardSize + index] = 1;
+
   // 行動
-  feature[(kPlayerNum + 1) * kBoardSize + pre_action_] = 1;
+  feature[(kPlayerNum + 2) * kBoardSize + pre_action_] = 1;
 
   return feature;
 }
